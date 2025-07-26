@@ -10,6 +10,39 @@ import { SubmitButton } from '@/components/submit-button';
 
 import { login, type LoginActionState } from '../actions';
 import { useSession } from 'next-auth/react';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+function SocialAuthButtons() {
+  const supabase = createClientComponentClient();
+
+  async function loginWith(provider: 'google' | 'facebook') {
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-4 mb-8">
+      <button
+        onClick={() => loginWith('google')}
+        className="w-full px-4 py-2 rounded bg-red-500 text-white font-semibold hover:bg-red-600"
+        type="button"
+      >
+        Sign in with Google
+      </button>
+      <button
+        onClick={() => loginWith('facebook')}
+        className="w-full px-4 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700"
+        type="button"
+      >
+        Sign in with Facebook
+      </button>
+    </div>
+  );
+}
 
 export default function Page() {
   const router = useRouter();
@@ -42,7 +75,7 @@ export default function Page() {
       updateSession();
       router.refresh();
     }
-  }, [state.status]);
+  }, [state.status, updateSession, router]);
 
   const handleSubmit = (formData: FormData) => {
     setEmail(formData.get('email') as string);
@@ -55,9 +88,10 @@ export default function Page() {
         <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
           <h3 className="text-xl font-semibold dark:text-zinc-50">Sign In</h3>
           <p className="text-sm text-gray-500 dark:text-zinc-400">
-            Use your email and password to sign in
+            Use your email and password or social login to sign in.
           </p>
         </div>
+        <SocialAuthButtons />
         <AuthForm action={handleSubmit} defaultEmail={email}>
           <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
           <p className="text-center text-sm text-gray-600 mt-4 dark:text-zinc-400">
